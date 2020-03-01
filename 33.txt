@@ -1,0 +1,115 @@
+from flask import Flask, request, Response
+from viberbot import Api
+from viberbot.api.bot_configuration import BotConfiguration
+from viberbot.api.messages.text_message import TextMessage
+from viberbot.api.viber_requests import ViberMessageRequest
+from viberbot.api.viber_requests import ViberConversationStartedRequest 
+from viberbot.api.messages import KeyboardMessage
+from Settings import TOKEN
+import json
+import random
+
+app = Flask(__name__)
+count = 0
+
+bot_configuration = BotConfiguration(
+    name='OrcaVV',
+    avatar='http://viber.com/avatar.jpg',
+    auth_token=TOKEN
+)
+
+viber = Api(bot_configuration)
+
+
+@app.route('/')
+def hello():
+    global count
+    count += 1
+    return f'Hello world {count}'
+
+
+class User:
+    def __init__(self, id, word, count):
+        self.id = id
+        self.word = word
+        self.count = count
+        self.ccount = 0
+
+
+def result(word, count):
+    l = []
+    with open("Red_Dragon.txt", 'r', encoding='utf8') as file:
+        for line in file:
+            if word in line:
+                l.append(line + '\n')
+            if  len(l) >= count:
+                break
+    return l
+
+
+def help():
+    help = "!Привет, человек! Я занимаюсь поиском слов в книге Томаса Харриса 'Красный дракон'. \n\nЧтобы задать команду поиска напиши - find \n\nНапример: find Molly 10 \n\nЧтобы найти следующие вхождения напиши - next \n\nНапример: next 5"
+    return help
+
+
+user = {}
+
+
+def poisk(id):
+    return user[id]
+
+
+@app.route('/incoming', methods=['POST'])
+def incoming():
+    # обработка
+    viber_request = viber.parse_request(request.get_data())
+    if isinstance(viber_request, ViberConversationStartedRequest):
+        viber_user = viber_request.user.id 
+        if viber_user is not in user:
+            viber.send_messages(viber_user, [TextMessage(text='Hello! Lets learn English')])
+        # если такого пользователя нет
+       ''' if viber_request.sender.id not in user:
+            viber_user = User(viber_request.sender.id, '', 0)
+            user[viber_request.sender.id] = viber_user
+        u = poisk(viber_request.sender.id)
+        if u.id == viber_request.sender.id:
+            message = viber_request.message
+            if isinstance(message, TextMessage):
+                text = message.text
+                bot_response = TextMessage(text='Для справки напишите help')
+                # HELP
+                if text.lower() == 'help':
+                    bot_response = TextMessage(text=help())
+                # FIND
+                if text.split()[0].lower() == 'find':
+                    word = text.split()[1]
+                    u.word = word
+                    count = 3
+                    if len(text.split()) == 3:
+                        count = int(text.split()[2])
+                        if count > 30:
+                            count = 30
+                            bot_response = TextMessage(text='Я могу выводить не более 30 вхождений за раз')
+                            viber.send_messages(viber_request.sender.id, [bot_response])
+                    u.count = count
+                    s = ' '.join(result(word, count))
+                    if len(s) == 0:
+                        s = 'Нет такого слова'
+                    bot_response = TextMessage(text=s)
+                # NEXT
+                if text.split()[0].lower() == 'next':
+                    count2 = 3
+                    if len(text.split()) == 2:
+                        count2 = int(text.split()[1])
+                    print(count2)
+                    l = result(u.word, count2 + u.count)
+                    s = ' '.join(l[u.count:count2 + u.count])
+                    u.count = count2 + u.count
+                    print(s)
+                    bot_response = TextMessage(text=s)
+                viber.send_messages(viber_request.sender.id, [bot_response])'''
+    return Response(status=200)
+
+
+if __name__ == '__main__':
+    app.run(host='127.0.0.1', port=80)

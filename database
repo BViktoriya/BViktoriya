@@ -1,0 +1,17 @@
+from flask import Flask, request, Response
+from viberbot import Api
+from viberbot.api.bot_configuration import BotConfiguration
+from viberbot.api.messages.text_message import TextMessage
+from viberbot.api.viber_requests import ViberMessageRequest
+from viberbot.api.viber_requests import ViberConversationStartedRequest
+from viberbot.api.messages import KeyboardMessage
+from Settings import TOKEN
+import json
+import random
+import sqlite3
+
+
+class MyDataBase:
+    def __init__(self, database_name):
+        self.conn = sqlite3.connect(database_name)
+        cursor = self.conn.curor()
